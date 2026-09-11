@@ -5,14 +5,17 @@ import { analyzeAudio, selectEditBeats, strengthAtBeat } from './lib/beat'
 import { canExportLocally, exportVideo } from './lib/exporter'
 import { filesToMedia } from './lib/media'
 import { t } from './i18n'
-import type { AudioSourceKind, BeatAnalysis, CutMode, EditStyle, ExportResult, Language, MediaItem, OutputQuality } from './types'
+import type { AudioSourceKind, BeatAnalysis, ColorLook, CropMode, CutMode, EditRecipe, EditStyle, ExportResult, Language, MediaItem, MediaOrder, OutputQuality, TransitionStyle } from './types'
 
 type InstallEvent = Event & { prompt: () => Promise<void>; userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }> }
 
 const AUDIO_ACCEPT = 'audio/*,.mp3,.m4a,.wav,.aac,.aif,.aiff,.caf,.flac,.ogg,.opus'
 const VIDEO_AUDIO_ACCEPT = 'video/*,.mp4,.mov,.m4v,.webm'
 const MEDIA_ACCEPT = 'image/*,video/*,.heic,.heif,.mov,.m4v'
-const STYLE_OPTIONS: EditStyle[] = ['punch', 'flow', 'clean', 'flash', 'drift', 'film', 'zoom', 'glitch']
+const STYLE_OPTIONS: EditStyle[] = ['punch', 'flow', 'clean', 'flash', 'drift', 'film', 'zoom', 'glitch', 'shake', 'whip', 'pulse', 'bounce', 'spin', 'blur', 'chroma', 'dream']
+const TRANSITIONS: TransitionStyle[] = ['auto', 'cut', 'crossfade', 'flash', 'whip', 'blur', 'glitch']
+const LOOKS: ColorLook[] = ['natural', 'vivid', 'warm', 'cool', 'mono', 'contrast']
+const RECIPES: EditRecipe[] = ['viral', 'smooth', 'cinematic', 'hyper', 'minimal']
 const PRESETS = [10, 15, 30, 45, 60]
 
 const clamp = (value: number, min: number, max: number) => Math.min(max, Math.max(min, value))
@@ -44,11 +47,20 @@ function App() {
   const [analysisLabel, setAnalysisLabel] = useState('')
   const [sensitivity, setSensitivity] = useState(58)
   const [style, setStyle] = useState<EditStyle>('punch')
+  const [fxPool, setFxPool] = useState<EditStyle[]>(['punch'])
+  const [transition, setTransition] = useState<TransitionStyle>('auto')
+  const [colorLook, setColorLook] = useState<ColorLook>('natural')
   const [quality, setQuality] = useState<OutputQuality>('720')
   const [seconds, setSeconds] = useState(15)
   const [startAt, setStartAt] = useState(0)
   const [cutMode, setCutMode] = useState<CutMode>('smart')
+  const [customInterval, setCustomInterval] = useState(0.75)
+  const [mediaOrder, setMediaOrder] = useState<MediaOrder>('sequence')
+  const [cropMode, setCropMode] = useState<CropMode>('cover')
+  const [videoSpeed, setVideoSpeed] = useState(1)
+  const [beatAccents, setBeatAccents] = useState(true)
   const [intensity, setIntensity] = useState(72)
+  const [presetStatus, setPresetStatus] = useState('')
   const [previewing, setPreviewing] = useState(false)
   const [previewIndex, setPreviewIndex] = useState(0)
   const [previewStrength, setPreviewStrength] = useState(0.5)
@@ -108,7 +120,20 @@ function App() {
 
   const effectiveDuration = useMemo(() => Math.min(Math.max(3, seconds), availableDuration), [seconds, availableDuration])
 
-  const editBeats = useMemo(() => analysis ? selectEditBeats(analysis, cutMode, startAt, effectiveDuration) : [], [analysis, cutMode, startAt, effectiveDuration])
+  const editBeats = useMemo(() => analysis ? selectEditBeats(analysis, cutMode, startAt, effectiveDuration, customInterval) : [], [analysis, cutMode, startAt, effectiveDuration, customInterval])
+
+  const previewStyle = fxPool[previewIndex % Math.max(1, fxPool.length)] ?? style
+  const previewMedia = useMemo(() => {
+    if (mediaOrder === 'sequence' || media.length <= 2) return media
+    const copy = [...media]
+    let seed = media.length * 97 + 31
+    for (let i = copy.length - 1; i > 0; i -= 1) {
+      seed = (seed * 1664525 + 1013904223) >>> 0
+      const j = seed % (i + 1)
+      ;[copy[i], copy[j]] = [copy[j], copy[i]]
+    }
+    return copy
+  }, [media, mediaOrder])
 
   useEffect(() => {
     if (!analysis) return
@@ -217,6 +242,88 @@ function App() {
     })
   }
 
+  const toggleEffect = (option: EditStyle) => {
+    setFxPool((current) => {
+      if (current.includes(option)) {
+        if (current.length === 1) return current
+        const next = current.filter((item) => item !== option)
+        setStyle(next[0])
+        return next
+      }
+      const next = [...current, option].slice(-6)
+      setStyle(next[0])
+      return next
+    })
+  }
+
+  const applyRecipe = (recipe: EditRecipe) => {
+    const settings: Record<EditRecipe, { fx: EditStyle[]; transition: TransitionStyle; look: ColorLook; cut: CutMode; intensity: number; order: MediaOrder; speed: number }> = {
+      viral: { fx: ['punch', 'flash', 'zoom', 'glitch', 'whip'], transition: 'auto', look: 'vivid', cut: 'smart', intensity: 86, order: 'shuffle', speed: 1.15 },
+      smooth: { fx: ['flow', 'drift', 'dream'], transition: 'crossfade', look: 'natural', cut: 'strong', intensity: 58, order: 'sequence', speed: 1 },
+      cinematic: { fx: ['film', 'drift', 'zoom', 'dream'], transition: 'blur', look: 'warm', cut: 'strong', intensity: 62, order: 'sequence', speed: 0.9 },
+      hyper: { fx: ['shake', 'whip', 'flash', 'glitch', 'pulse'], transition: 'glitch', look: 'contrast', cut: 'every', intensity: 100, order: 'shuffle', speed: 1.25 },
+      minimal: { fx: ['clean', 'zoom'], transition: 'crossfade', look: 'natural', cut: 'strong', intensity: 34, order: 'sequence', speed: 1 }
+    }
+    const next = settings[recipe]
+    setFxPool(next.fx)
+    setStyle(next.fx[0])
+    setTransition(next.transition)
+    setColorLook(next.look)
+    setCutMode(next.cut)
+    setIntensity(next.intensity)
+    setMediaOrder(next.order)
+    setVideoSpeed(next.speed)
+    setPresetStatus(copy.recipeApplied)
+  }
+
+  const remix = () => {
+    const shuffled = [...STYLE_OPTIONS].sort(() => Math.random() - 0.5)
+    const count = 3 + Math.floor(Math.random() * 3)
+    const nextFx = shuffled.slice(0, count)
+    const transitionChoices: TransitionStyle[] = ['auto', 'flash', 'whip', 'blur', 'glitch', 'crossfade']
+    const lookChoices: ColorLook[] = ['natural', 'vivid', 'warm', 'cool', 'contrast']
+    const cutChoices: CutMode[] = ['smart', 'strong', 'every']
+    setFxPool(nextFx)
+    setStyle(nextFx[0])
+    setTransition(transitionChoices[Math.floor(Math.random() * transitionChoices.length)])
+    setColorLook(lookChoices[Math.floor(Math.random() * lookChoices.length)])
+    setCutMode(cutChoices[Math.floor(Math.random() * cutChoices.length)])
+    setIntensity(58 + Math.floor(Math.random() * 39))
+    setMediaOrder(Math.random() > 0.45 ? 'shuffle' : 'sequence')
+    setPresetStatus(copy.remixed)
+  }
+
+  const savePreset = () => {
+    localStorage.setItem('ritmexa-custom-preset', JSON.stringify({
+      fxPool, transition, colorLook, cutMode, customInterval, mediaOrder, cropMode, videoSpeed, beatAccents, intensity, quality
+    }))
+    setPresetStatus(copy.presetSaved)
+  }
+
+  const loadPreset = () => {
+    try {
+      const raw = localStorage.getItem('ritmexa-custom-preset')
+      if (!raw) return setPresetStatus(copy.noPreset)
+      const saved = JSON.parse(raw) as Partial<{
+        fxPool: EditStyle[]; transition: TransitionStyle; colorLook: ColorLook; cutMode: CutMode; customInterval: number; mediaOrder: MediaOrder; cropMode: CropMode; videoSpeed: number; beatAccents: boolean; intensity: number; quality: OutputQuality
+      }>
+      if (saved.fxPool?.length) { const validFx = saved.fxPool.filter((item) => STYLE_OPTIONS.includes(item)).slice(0, 6); if (validFx.length) { setFxPool(validFx); setStyle(validFx[0]) } }
+      if (saved.transition && TRANSITIONS.includes(saved.transition)) setTransition(saved.transition)
+      if (saved.colorLook && LOOKS.includes(saved.colorLook)) setColorLook(saved.colorLook)
+      if (saved.cutMode) setCutMode(saved.cutMode)
+      if (typeof saved.customInterval === 'number') setCustomInterval(clamp(saved.customInterval, 0.2, 4))
+      if (saved.mediaOrder) setMediaOrder(saved.mediaOrder)
+      if (saved.cropMode) setCropMode(saved.cropMode)
+      if (typeof saved.videoSpeed === 'number') setVideoSpeed(saved.videoSpeed)
+      if (typeof saved.beatAccents === 'boolean') setBeatAccents(saved.beatAccents)
+      if (typeof saved.intensity === 'number') setIntensity(saved.intensity)
+      if (saved.quality) setQuality(saved.quality)
+      setPresetStatus(copy.presetLoaded)
+    } catch {
+      setPresetStatus(copy.noPreset)
+    }
+  }
+
   const updatePreview = () => {
     const audio = audioRef.current
     if (!audio || !analysis || audio.paused) return
@@ -226,7 +333,7 @@ function App() {
       if (editBeats[i] <= time) beatIndex = i
       else break
     }
-    setPreviewIndex(beatIndex % Math.max(1, media.length))
+    setPreviewIndex(beatIndex % Math.max(1, previewMedia.length))
     setPreviewStrength(strengthAtBeat(analysis, editBeats[beatIndex] ?? time))
 
     if (time >= startAt + effectiveDuration || audio.ended) {
@@ -283,8 +390,16 @@ function App() {
         seconds: effectiveDuration,
         startAt,
         style,
+        fxPool,
+        transition,
+        colorLook,
         quality,
         cutMode,
+        customInterval,
+        mediaOrder,
+        cropMode,
+        videoSpeed,
+        beatAccents,
         intensity: intensity / 100,
         onProgress: setProgress
       })
@@ -335,7 +450,7 @@ function App() {
     setInstallEvent(null)
   }
 
-  const selected = media[previewIndex]
+  const selected = previewMedia[previewIndex % Math.max(1, previewMedia.length)]
   const maxStart = analysis ? Math.max(0, Math.floor(analysis.duration - 3)) : 0
 
   return (
@@ -355,7 +470,7 @@ function App() {
         <div className="install-overlay" role="dialog" aria-modal="true" aria-label={copy.installTitle}>
           <div className={`install-sheet ${installPlatform === 'ios' ? 'ios-install-sheet' : 'android-install-sheet'}`}>
             <button className="install-close" onClick={dismissInstallPrompt} aria-label={copy.close}>×</button>
-            <div className="install-app-icon"><span className="brand-mark small"><i /><i /><i /><b /></span></div>
+            <div className="install-app-icon"><img src="./brand-mark-v030.png" alt="" /></div>
             <div className="install-copy">
               <span className="eyebrow">RITMEXA APP</span>
               <h2>{installPlatform === 'ios' ? copy.iosInstallTitle : copy.installTitle}</h2>
@@ -407,7 +522,7 @@ function App() {
         </section>
 
         <section className="studio" id="studio">
-          <div className="section-heading"><span className="eyebrow">RITMEXA STUDIO 0.2</span><h2>Edit to the <em>rhythm.</em></h2><p>{copy.localOnly}</p></div>
+          <div className="section-heading"><span className="eyebrow">RITMEXA CREATOR STUDIO 0.3</span><h2>Edit to the <em>rhythm.</em></h2><p>{copy.localOnly}</p></div>
 
           <div className="mobile-studio-title"><span className="eyebrow">RITMEXA STUDIO</span><h1>{copy.mobileTitle}</h1><p>{copy.mobileSubtitle}</p></div>
 
@@ -505,13 +620,27 @@ function App() {
                 )}
               </article>
 
-              <article className="panel">
-                <div className="panel-heading"><div><span className="panel-number">03</span><h3>{copy.motionTitle}</h3></div></div>
-                <div className="style-cards">
+              <article className="panel creator-panel">
+                <div className="panel-heading"><div><span className="panel-number">03</span><h3>{copy.creatorStudio}</h3></div><p>{copy.creatorStudioHelp}</p></div>
+
+                <div className="recipe-row">
+                  {RECIPES.map((recipe) => <button key={recipe} onClick={() => applyRecipe(recipe)}><strong>{copy[recipe]}</strong><small>{copy[`${recipe}Desc` as keyof typeof copy]}</small></button>)}
+                </div>
+
+                <div className="creator-actions">
+                  <button className="remix-button" onClick={remix}><span>↻</span><strong>{copy.remix}</strong><small>{copy.remixHelp}</small></button>
+                  <button onClick={savePreset}><strong>{copy.savePreset}</strong><small>{copy.savePresetHelp}</small></button>
+                  <button onClick={loadPreset}><strong>{copy.loadPreset}</strong><small>{copy.loadPresetHelp}</small></button>
+                </div>
+                {presetStatus && <div className="preset-status">{presetStatus}</div>}
+
+                <div className="subsection-heading"><div><strong>{copy.motionMix}</strong><small>{copy.motionMixHelp}</small></div><span>{fxPool.length}/6</span></div>
+                <div className="style-cards advanced">
                   {STYLE_OPTIONS.map((option) => (
-                    <button className={style === option ? 'style-card active' : 'style-card'} onClick={() => setStyle(option)} key={option}>
+                    <button className={fxPool.includes(option) ? 'style-card active' : 'style-card'} onClick={() => toggleEffect(option)} key={option}>
                       <span className={`style-preview ${option}`}><i /><i /><i /></span>
                       <strong>{copy[option]}</strong><small>{copy[`${option}Desc` as keyof typeof copy]}</small>
+                      <span className="fx-check">{fxPool.includes(option) ? '✓' : '+'}</span>
                     </button>
                   ))}
                 </div>
@@ -521,14 +650,49 @@ function App() {
                   <input type="range" min="20" max="100" value={intensity} onChange={(event) => setIntensity(Number(event.target.value))} />
                 </div>
 
+                <div className="advanced-grid">
+                  <div className="control-box">
+                    <label>{copy.transition}</label>
+                    <select value={transition} onChange={(event) => setTransition(event.target.value as TransitionStyle)}>{TRANSITIONS.map((item) => <option key={item} value={item}>{copy[item]}</option>)}</select>
+                  </div>
+                  <div className="control-box">
+                    <label>{copy.colorLook}</label>
+                    <select value={colorLook} onChange={(event) => setColorLook(event.target.value as ColorLook)}>{LOOKS.map((item) => <option key={item} value={item}>{copy[item]}</option>)}</select>
+                  </div>
+                  <div className="control-box">
+                    <label>{copy.mediaOrder}</label>
+                    <div className="segment-control two">
+                      <button className={mediaOrder === 'sequence' ? 'active' : ''} onClick={() => setMediaOrder('sequence')}>{copy.sequence}</button>
+                      <button className={mediaOrder === 'shuffle' ? 'active' : ''} onClick={() => setMediaOrder('shuffle')}>{copy.shuffle}</button>
+                    </div>
+                  </div>
+                  <div className="control-box">
+                    <label>{copy.cropMode}</label>
+                    <div className="segment-control two">
+                      <button className={cropMode === 'cover' ? 'active' : ''} onClick={() => setCropMode('cover')}>{copy.cover}</button>
+                      <button className={cropMode === 'contain' ? 'active' : ''} onClick={() => setCropMode('contain')}>{copy.fit}</button>
+                    </div>
+                  </div>
+                  <div className="control-box">
+                    <label>{copy.videoSpeed}</label>
+                    <select value={videoSpeed} onChange={(event) => setVideoSpeed(Number(event.target.value))}>
+                      <option value={0.75}>0.75x</option><option value={0.9}>0.9x</option><option value={1}>1x</option><option value={1.15}>1.15x</option><option value={1.25}>1.25x</option><option value={1.5}>1.5x</option>
+                    </select>
+                  </div>
+                  <div className="control-box toggle-box">
+                    <label>{copy.beatAccents}</label>
+                    <button className={beatAccents ? 'toggle active' : 'toggle'} onClick={() => setBeatAccents((value) => !value)}><i />{beatAccents ? copy.on : copy.off}</button>
+                  </div>
+                </div>
+
+                <div className="subsection-heading"><div><strong>{copy.customEdit}</strong><small>{copy.customEditHelp}</small></div></div>
                 <div className="control-grid">
                   <div className="control-box">
                     <label>{copy.cutPace}</label>
-                    <div className="segment-control three">
-                      {(['smart', 'every', 'strong'] as CutMode[]).map((mode) => <button key={mode} className={cutMode === mode ? 'active' : ''} onClick={() => setCutMode(mode)}>{copy[mode]}</button>)}
+                    <div className="segment-control four">
+                      {(['smart', 'every', 'strong', 'custom'] as CutMode[]).map((mode) => <button key={mode} className={cutMode === mode ? 'active' : ''} onClick={() => setCutMode(mode)}>{copy[mode]}</button>)}
                     </div>
                   </div>
-
                   <div className="control-box">
                     <label>{copy.quality}</label>
                     <div className="segment-control two">
@@ -538,12 +702,18 @@ function App() {
                   </div>
                 </div>
 
+                {cutMode === 'custom' && <div className="range-block custom-cut-range">
+                  <div className="range-title"><span>{copy.customCut}</span><strong>{customInterval.toFixed(2)}s</strong></div>
+                  <input type="range" min="0.2" max="4" step="0.05" value={customInterval} onChange={(event) => setCustomInterval(Number(event.target.value))} />
+                  <small>{copy.customCutHelp}</small>
+                </div>}
+
                 <div className="timing-grid">
                   <label>{copy.startAt}<div className="number-field"><input type="number" min="0" max={maxStart} step="1" value={Math.round(startAt)} onChange={(event) => setStartAt(clamp(Number(event.target.value) || 0, 0, maxStart))} /><span>{copy.seconds}</span></div></label>
                   <label>{copy.customSeconds}<div className="number-field"><input type="number" min="3" max={Math.floor(availableDuration)} step="1" value={Math.round(effectiveDuration)} onChange={(event) => setSeconds(clamp(Number(event.target.value) || 3, 3, Math.max(3, Math.floor(availableDuration))))} /><span>{copy.seconds}</span></div></label>
                 </div>
                 <div className="preset-row">{PRESETS.map((value) => <button key={value} disabled={value > availableDuration} className={Math.round(effectiveDuration) === value ? 'active' : ''} onClick={() => setSeconds(Math.min(value, availableDuration))}>{value}s</button>)}</div>
-                {analysis && <div className="timing-summary"><span>{formatTime(startAt)} → {formatTime(startAt + effectiveDuration)}</span><strong>{editBeats.length} cuts</strong></div>}
+                {analysis && <div className="timing-summary"><span>{formatTime(startAt)} → {formatTime(startAt + effectiveDuration)}</span><strong>{editBeats.length} {copy.cuts}</strong></div>}
               </article>
 
               <article className="panel export-workspace">
@@ -563,18 +733,18 @@ function App() {
             <aside className="preview-column">
               <div className="preview-sticky">
                 <div className="preview-heading"><div><span className="eyebrow">{copy.preview}</span><strong>9:16</strong></div><span>{Math.round(effectiveDuration)}s</span></div>
-                <div className={`preview-phone style-${style} ${previewing ? 'is-playing' : ''}`} style={{ '--hit': previewStrength, '--intensity': intensity / 100 } as React.CSSProperties}>
-                  <div className="preview-screen" key={`${previewIndex}-${style}-${previewing ? 'play' : 'stop'}`}>
+                <div className={`preview-phone style-${previewStyle} look-${colorLook} crop-${cropMode} transition-${transition} ${previewing ? 'is-playing' : ''}`} style={{ '--hit': previewStrength, '--intensity': intensity / 100 } as React.CSSProperties}>
+                  <div className="preview-screen" key={`${previewIndex}-${previewStyle}-${colorLook}-${previewing ? 'play' : 'stop'}`}>
                     {!selected ? <div className="preview-placeholder"><span className="brand-mark small"><i /><i /><i /><b /></span><strong>Ritmexa</strong><small>{copy.tagline}</small></div> : selected.kind === 'image' ? <img src={selected.url} alt="Preview" /> : <video src={selected.url} autoPlay={previewing} muted loop playsInline />}
                     {selected && <div className="preview-vignette" />}
-                    {selected && style === 'film' && <div className="preview-grain" />}
-                    {selected && style === 'flash' && <div className="preview-flash" />}
-                    {selected && style === 'glitch' && <div className="preview-glitch"><i /><i /><i /></div>}
+                    {selected && previewStyle === 'film' && <div className="preview-grain" />}
+                    {selected && (previewStyle === 'flash' || transition === 'flash') && <div className="preview-flash" />}
+                    {selected && (previewStyle === 'glitch' || previewStyle === 'chroma' || transition === 'glitch') && <div className="preview-glitch"><i /><i /><i /></div>}
                   </div>
                 </div>
                 <button className="preview-button" onClick={() => void togglePreview()} disabled={!analysis || media.length < 2}>{previewing ? 'Ⅱ' : '▶'} {previewing ? copy.pausePreview : copy.playPreview}</button>
                 <small className="preview-hint">{copy.previewHint}</small>
-                <div className="timeline-mini">{media.slice(0, 14).map((item, index) => <span key={item.id} className={index === previewIndex ? 'active' : ''}>{item.kind === 'image' ? <img src={item.url} alt="" /> : <video src={item.url} muted />}</span>)}</div>
+                <div className="timeline-mini">{previewMedia.slice(0, 14).map((item, index) => <span key={item.id} className={index === previewIndex ? 'active' : ''}>{item.kind === 'image' ? <img src={item.url} alt="" /> : <video src={item.url} muted />}</span>)}</div>
 
               </div>
             </aside>

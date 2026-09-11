@@ -4,75 +4,66 @@
 
 ### Your moments, on beat.
 
-A local first Progressive Web App for creating beat synced vertical edits from photos, clips and your own soundtrack.
+A local first creator PWA for turning photos, clips and music into beat synced vertical edits.
 
 **Live app:** https://donacgreece.github.io/Ritmexa/
 
 </div>
 
-## Ritmexa 0.2
+## Ritmexa 0.3 Creator Studio
 
-Ritmexa 0.2 is a major upgrade focused on responsive layout, stronger audio analysis, a cleaner mobile app experience and more expressive editing controls.
+Version 0.3 moves Ritmexa from a simple beat synced generator toward a reusable creator tool. The editor can now mix multiple motion effects, transitions, color looks and pacing rules so the same media can produce genuinely different edits.
 
-### Highlights
+### Creator features
 
-- Fully responsive interface for phones, tablets, laptops and desktop monitors
-- Desktop preview constrained to the available viewport so it does not overlap other content
-- Mobile interface that opens directly into the editing experience
-- Installable PWA with offline app shell
-- Apple startup images plus an in app launch screen
-- Greek and English UI
-- iPhone friendly native file pickers
-- Music file input
-- Soundtrack extraction from a saved video file
-- Advanced local rhythm analysis
+- 16 motion effects
+- Multi effect Motion Mix with up to 6 effects in one edit
+- Viral, Smooth, Cinematic, Hyper and Minimal creator recipes
+- One tap Remix that generates a new combination without replacing the selected media
+- 7 transition modes including Auto, Crossfade, Flash, Whip, Blur and Glitch
+- 6 color looks
+- Smart, Every Beat, Strong Beats and Custom cut timing
+- Exact custom cut interval from 0.20 to 4 seconds
+- Custom edit start point and duration
+- Sequential or shuffled media order
+- Fill or Fit framing
+- Adjustable source clip playback speed
+- Optional strong beat accents
+- Adjustable motion intensity
+- Save and load a personal creator preset locally on the device
+- 720p and 1080p vertical export
+
+### Rhythm engine
+
 - BPM estimation
-- Beat strength analysis
+- Beat detection
 - Strong beat detection
-- Tempo stability score
-- Energy analysis
+- Beat strength analysis
+- Tempo stability
+- Energy estimate
 - Waveform visualization
 - Adjustable beat sensitivity
-- Custom edit duration
-- Custom soundtrack start point
-- Smart, Every Beat and Strong Beats cut modes
-- Adjustable motion intensity
-- Eight editing styles
-- 720p and 1080p vertical export
-- Local browser processing
-- No account
-- No watermark
 
-## Soundtrack sources
+### Soundtrack sources
 
-Ritmexa supports two soundtrack workflows.
+- Local music files
+- Soundtrack extraction from a saved local video file
 
-### Music file
+Direct importing from a TikTok URL is intentionally not included because the current GitHub Pages architecture has no media import backend.
 
-Choose a local MP3, M4A, WAV, AAC, FLAC or another format supported by the browser.
+### Mobile and PWA
 
-### Soundtrack from a saved video
+- Mobile first creator UI
+- First studio screen focuses on Preview and Step 1
+- Android native PWA install prompt
+- iPhone install instructions through Safari Add to Home Screen
+- Dedicated iPhone startup images
+- Correct Ritmexa splash mark reused from the real app icon geometry
+- Offline app shell through the service worker
 
-Choose a saved TikTok, Reel, Short or another local video file. Ritmexa attempts to prepare the embedded audio locally on the device and then runs beat analysis on that soundtrack.
+### Privacy
 
-Direct importing from a TikTok URL is not included in this release. The user supplies a saved video file from their device.
-
-## Motion styles
-
-- Punch
-- Flow
-- Clean
-- Flash
-- Drift
-- Film
-- Zoom
-- Glitch
-
-## Privacy
-
-The current editing workflow is designed to run locally in the browser. Selected photos, clips and soundtrack media are not uploaded to a Ritmexa media processing server.
-
-The website itself is hosted on GitHub Pages, so normal hosting request logs can still apply.
+Selected photos, clips and soundtrack media are processed locally in the browser. Ritmexa does not upload project media to a Ritmexa rendering server in this release.
 
 ## Development
 
@@ -81,34 +72,11 @@ Requirements:
 - Node.js 22 or newer
 - npm
 
-Install dependencies:
-
 ```bash
 npm install
-```
-
-Run development mode:
-
-```bash
-npm run dev
-```
-
-Type check:
-
-```bash
 npm run check
-```
-
-Create a production build:
-
-```bash
 npm run build
-```
-
-Preview the build:
-
-```bash
-npm run preview
+npm run dev
 ```
 
 ## Deployment
@@ -127,51 +95,13 @@ Repository:
 https://github.com/Donacgreece/Ritmexa
 ```
 
-## Browser targets
-
-Primary targets are current versions of:
-
-- Safari
-- Chrome
-- Edge
-
-On phones, 720p is recommended for faster and more reliable local rendering. Browser codec support determines whether the final file is MP4 or WebM.
-
-## Brand
+## Palette
 
 | Token | Value |
 | --- | --- |
 | Machine Red | `#FF2D3A` |
 | Glacier Blue | `#DBF6FF` |
-| Ice White | `#F7FCFE` |
+| Off White | `#F7FCFE` |
 | Charcoal | `#1F1F1F` |
-| Warm Gray | `#858B88` |
 
-**Ritmexa 0.2.7**
-
-
-### Build reliability
-
-Version 0.2.2 invokes Vite and TypeScript through Node directly and normalizes executable permissions in GitHub Actions. This avoids cross platform executable bit issues during Pages builds.
-
-
-## 0.2.3 preview workspace
-
-The preview was redesigned to stay compact at every viewport size. Desktop and laptop layouts no longer use an internal preview scrollbar, while phones use a compact horizontal preview card so the 9:16 canvas does not take over half of the screen. Export controls now live in the main editing column.
-
-## Preview sizing
-
-Version 0.2.4 slightly increases the preview size on desktop, tablet and phone while keeping the compact no-scroll workspace introduced in 0.2.3.
-
-## 0.2.5 first screen and install flow
-
-The mobile and installed app workspace now opens with the live preview and media step as the first two visible editing elements. The preview is slightly larger on phone and desktop. Android receives an in app install prompt that launches the native PWA install flow, while iPhone users receive a short modal with the Safari Add to Home Screen steps.
-
-## 0.2.6 icon restoration
-
-Restores the original Ritmexa PWA icon artwork from the first release and switches the manifest to versioned icon filenames so mobile operating systems do not keep the accidentally regenerated icon in cache.
-
-
-## 0.2.7 palette refresh
-
-The interface now uses Machine Red `#FF2D3A` as the primary action color and Glacier Blue `#DBF6FF` as the secondary surface color. PWA icons, splash screens, browser theme color and export accents were updated to match the new palette.
+**Ritmexa 0.3.0**

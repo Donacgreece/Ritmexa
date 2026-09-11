@@ -15,13 +15,13 @@
     <meta name="twitter:card" content="summary" />
     <link rel="icon" href="./favicon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="./apple-touch-icon-v027.png" />
-    <link rel="apple-touch-startup-image" href="./launch/iphone-430x932-v027.png" media="(device-width: 430px) and (device-height: 932px) and (-webkit-device-pixel-ratio: 3)" />
-    <link rel="apple-touch-startup-image" href="./launch/iphone-393x852-v027.png" media="(device-width: 393px) and (device-height: 852px) and (-webkit-device-pixel-ratio: 3)" />
-    <link rel="apple-touch-startup-image" href="./launch/iphone-390x844-v027.png" media="(device-width: 390px) and (device-height: 844px) and (-webkit-device-pixel-ratio: 3)" />
-    <link rel="apple-touch-startup-image" href="./launch/iphone-414x896-3x-v027.png" media="(device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 3)" />
-    <link rel="apple-touch-startup-image" href="./launch/iphone-375x812-v027.png" media="(device-width: 375px) and (device-height: 812px) and (-webkit-device-pixel-ratio: 3)" />
-    <link rel="apple-touch-startup-image" href="./launch/iphone-414x896-2x-v027.png" media="(device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 2)" />
-    <link rel="apple-touch-startup-image" href="./launch/iphone-375x667-v027.png" media="(device-width: 375px) and (device-height: 667px) and (-webkit-device-pixel-ratio: 2)" />
+    <link rel="apple-touch-startup-image" href="./launch/iphone-430x932-v030.png" media="(device-width: 430px) and (device-height: 932px) and (-webkit-device-pixel-ratio: 3)" />
+    <link rel="apple-touch-startup-image" href="./launch/iphone-393x852-v030.png" media="(device-width: 393px) and (device-height: 852px) and (-webkit-device-pixel-ratio: 3)" />
+    <link rel="apple-touch-startup-image" href="./launch/iphone-390x844-v030.png" media="(device-width: 390px) and (device-height: 844px) and (-webkit-device-pixel-ratio: 3)" />
+    <link rel="apple-touch-startup-image" href="./launch/iphone-414x896-3x-v030.png" media="(device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 3)" />
+    <link rel="apple-touch-startup-image" href="./launch/iphone-375x812-v030.png" media="(device-width: 375px) and (device-height: 812px) and (-webkit-device-pixel-ratio: 3)" />
+    <link rel="apple-touch-startup-image" href="./launch/iphone-414x896-2x-v030.png" media="(device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 2)" />
+    <link rel="apple-touch-startup-image" href="./launch/iphone-375x667-v030.png" media="(device-width: 375px) and (device-height: 667px) and (-webkit-device-pixel-ratio: 2)" />
     <title>Ritmexa • Your moments, on beat</title>
     <script>
       if (!window.matchMedia('(display-mode: standalone)').matches && !navigator.standalone) {
@@ -33,20 +33,18 @@
       #app-splash{position:fixed;inset:0;z-index:9999;display:grid;place-items:center;background:#dbf6ff;transition:opacity .34s ease,visibility .34s ease}
       .browser-mode #app-splash{display:none}
       .app-ready #app-splash{opacity:0;visibility:hidden;pointer-events:none}
-      .launch-lockup{display:flex;flex-direction:column;align-items:center;gap:18px;font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#1f1f1f}
-      .launch-mark{position:relative;width:92px;height:74px}
-      .launch-mark i{position:absolute;bottom:15px;width:13px;border-radius:12px;background:linear-gradient(180deg,#ff5964,#d91f2b)}
-      .launch-mark i:nth-child(1){left:3px;height:37px}.launch-mark i:nth-child(2){left:27px;height:60px}.launch-mark i:nth-child(3){left:51px;height:47px}
-      .launch-mark b{position:absolute;left:58px;bottom:19px;width:0;height:0;border-top:18px solid transparent;border-bottom:18px solid transparent;border-left:27px solid #ff2d3a}
-      .launch-lockup strong{font-size:30px;letter-spacing:-.05em}.launch-lockup small{font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:#8a8f8c;font-weight:800}
+      .launch-lockup{display:flex;flex-direction:column;align-items:center;gap:17px;font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#1f1f1f}
+      .launch-mark-img{width:118px;height:118px;object-fit:contain}
+      .launch-lockup strong{font-size:31px;letter-spacing:-.05em}
+      .launch-lockup small{font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:#5d6c72;font-weight:800}
     </style>
-    <script type="module" crossorigin src="./assets/index-B6t90taK.js"></script>
-    <link rel="stylesheet" crossorigin href="./assets/index-B95UrvW6.css">
+    <script type="module" crossorigin src="./assets/index-_RbTJL35.js"></script>
+    <link rel="stylesheet" crossorigin href="./assets/index-D1yxuiwg.css">
   <link rel="manifest" href="./manifest.webmanifest"></head>
   <body>
     <div id="app-splash" aria-hidden="true">
       <div class="launch-lockup">
-        <span class="launch-mark"><i></i><i></i><i></i><b></b></span>
+        <img class="launch-mark-img" src="./brand-mark-v030.png" alt="" />
         <strong>Ritmexa</strong>
         <small>Your moments, on beat</small>
       </div>

@@ -25,7 +25,7 @@ try {
 
     Write-Host ""
     Write-Host "========================================" -ForegroundColor DarkGray
-    Write-Host " Ritmexa v0.2.7 Build and Push" -ForegroundColor Magenta
+    Write-Host " Ritmexa v0.3.0 Build and Push" -ForegroundColor Magenta
     Write-Host "========================================" -ForegroundColor DarkGray
     Write-Host ""
 
@@ -35,14 +35,14 @@ try {
         }
     }
 
-    Write-Host "[1/7] Finding Ritmexa v0.2.7 ZIP in Downloads..." -ForegroundColor Cyan
+    Write-Host "[1/7] Finding Ritmexa v0.3.0 ZIP in Downloads..." -ForegroundColor Cyan
 
-    $Zip = Get-ChildItem -Path $Downloads -Filter "Ritmexa_v0.2.7*.zip" -File |
+    $Zip = Get-ChildItem -Path $Downloads -Filter "Ritmexa_v0.3.0*.zip" -File |
         Sort-Object LastWriteTime -Descending |
         Select-Object -First 1
 
     if (-not $Zip) {
-        Fail-Ritmexa "Ritmexa_v0.2.7 ZIP was not found in $Downloads"
+        Fail-Ritmexa "Ritmexa_v0.3.0 ZIP was not found in $Downloads"
     }
 
     Write-Host "Using: $($Zip.FullName)" -ForegroundColor Green

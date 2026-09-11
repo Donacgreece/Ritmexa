@@ -1,5 +1,16 @@
 import { selectEditBeats, strengthAtBeat } from './beat'
-import type { BeatAnalysis, CutMode, EditStyle, ExportResult, MediaItem, OutputQuality } from '../types'
+import type {
+  BeatAnalysis,
+  ColorLook,
+  CropMode,
+  CutMode,
+  EditStyle,
+  ExportResult,
+  MediaItem,
+  MediaOrder,
+  OutputQuality,
+  TransitionStyle
+} from '../types'
 
 interface ExportOptions {
   media: MediaItem[]
@@ -8,8 +19,16 @@ interface ExportOptions {
   seconds: number
   startAt: number
   style: EditStyle
+  fxPool?: EditStyle[]
+  transition: TransitionStyle
+  colorLook: ColorLook
   quality: OutputQuality
   cutMode: CutMode
+  customInterval: number
+  mediaOrder: MediaOrder
+  cropMode: CropMode
+  videoSpeed: number
+  beatAccents: boolean
   intensity: number
   onProgress?: (progress: number) => void
 }
@@ -78,6 +97,18 @@ function sourceDimensions(source: CanvasImageSource, fallbackWidth: number, fall
   return { width: fallbackWidth, height: fallbackHeight }
 }
 
+function lookFilter(look: ColorLook, blur = 0) {
+  const filters: Record<ColorLook, string> = {
+    natural: 'saturate(1) contrast(1)',
+    vivid: 'saturate(1.28) contrast(1.08)',
+    warm: 'saturate(1.08) sepia(.13) contrast(1.03)',
+    cool: 'saturate(1.05) hue-rotate(8deg) contrast(1.04)',
+    mono: 'grayscale(1) contrast(1.1)',
+    contrast: 'saturate(1.08) contrast(1.2) brightness(.98)'
+  }
+  return `${filters[look]}${blur > 0 ? ` blur(${blur.toFixed(1)}px)` : ''}`
+}
+
 function drawCover(
   ctx: CanvasRenderingContext2D,
   source: CanvasImageSource,
@@ -87,7 +118,8 @@ function drawCover(
   panX = 0,
   panY = 0,
   rotation = 0,
-  alpha = 1
+  alpha = 1,
+  filter = 'none'
 ) {
   const dimensions = sourceDimensions(source, width, height)
   if (!dimensions.width || !dimensions.height) return
@@ -98,6 +130,7 @@ function drawCover(
 
   ctx.save()
   ctx.globalAlpha = alpha
+  ctx.filter = filter
   ctx.translate(width / 2, height / 2)
   ctx.rotate(rotation)
   ctx.translate(-width / 2, -height / 2)
@@ -105,6 +138,56 @@ function drawCover(
   const y = (height - drawH) / 2 + panY
   ctx.drawImage(source, x, y, drawW, drawH)
   ctx.restore()
+}
+
+function drawContain(
+  ctx: CanvasRenderingContext2D,
+  source: CanvasImageSource,
+  width: number,
+  height: number,
+  scale = 1,
+  panX = 0,
+  panY = 0,
+  rotation = 0,
+  alpha = 1,
+  filter = 'none'
+) {
+  const dimensions = sourceDimensions(source, width, height)
+  if (!dimensions.width || !dimensions.height) return
+
+  const baseScale = Math.min(width / dimensions.width, height / dimensions.height) * scale
+  const drawW = dimensions.width * baseScale
+  const drawH = dimensions.height * baseScale
+
+  ctx.save()
+  ctx.globalAlpha = alpha
+  ctx.filter = filter
+  ctx.translate(width / 2, height / 2)
+  ctx.rotate(rotation)
+  ctx.translate(-width / 2, -height / 2)
+  const x = (width - drawW) / 2 + panX
+  const y = (height - drawH) / 2 + panY
+  ctx.drawImage(source, x, y, drawW, drawH)
+  ctx.restore()
+}
+
+function drawMedia(
+  ctx: CanvasRenderingContext2D,
+  source: CanvasImageSource,
+  width: number,
+  height: number,
+  cropMode: CropMode,
+  colorLook: ColorLook,
+  transform: { scale: number; panX: number; panY: number; rotation: number },
+  alpha = 1,
+  blur = 0
+) {
+  if (cropMode === 'contain') {
+    drawCover(ctx, source, width, height, 1.08, 0, 0, 0, alpha * 0.5, `${lookFilter(colorLook, 26)} brightness(.55)`)
+    drawContain(ctx, source, width, height, transform.scale, transform.panX, transform.panY, transform.rotation, alpha, lookFilter(colorLook, blur))
+    return
+  }
+  drawCover(ctx, source, width, height, transform.scale, transform.panX, transform.panY, transform.rotation, alpha, lookFilter(colorLook, blur))
 }
 
 function sceneForTime(time: number, beats: number[], analysis: BeatAnalysis) {
@@ -146,9 +229,7 @@ function styleTransform(
     panY = height * 0.012 * Math.sin(progress * Math.PI) * amount
   }
 
-  if (style === 'clean') {
-    scale = 1.012 + progress * 0.018 * amount
-  }
+  if (style === 'clean') scale = 1.012 + progress * 0.018 * amount
 
   if (style === 'flash') {
     const hit = Math.exp(-progress * 11)
@@ -184,7 +265,68 @@ function styleTransform(
     panX = (sceneIndex % 2 === 0 ? -1 : 1) * hit * width * 0.018 * amount
   }
 
+  if (style === 'shake') {
+    const hit = Math.exp(-progress * 8)
+    scale = 1.035 + hit * 0.025 * amount
+    panX = Math.sin(progress * 42 + sceneIndex) * width * 0.018 * hit * amount
+    panY = Math.cos(progress * 37 + sceneIndex) * height * 0.012 * hit * amount
+    rotation = Math.sin(progress * 29) * 0.018 * hit * amount
+  }
+
+  if (style === 'whip') {
+    const direction = sceneIndex % 2 === 0 ? -1 : 1
+    const enter = (1 - ease(Math.min(1, progress / 0.22)))
+    scale = 1.04 + enter * 0.025 * amount
+    panX = direction * width * 0.24 * enter * amount
+    rotation = direction * 0.035 * enter * amount
+  }
+
+  if (style === 'pulse') {
+    const pulse = Math.sin(progress * Math.PI * 2) * 0.5 + 0.5
+    scale = 1.02 + pulse * (0.025 + strength * 0.035) * amount
+  }
+
+  if (style === 'bounce') {
+    const bounce = Math.sin(Math.min(1, progress * 1.3) * Math.PI)
+    scale = 1.035 + bounce * 0.025 * amount
+    panY = -bounce * height * 0.035 * amount
+  }
+
+  if (style === 'spin') {
+    const direction = sceneIndex % 2 === 0 ? -1 : 1
+    const settle = 1 - ease(Math.min(1, progress / 0.38))
+    scale = 1.055 + settle * 0.035 * amount
+    rotation = direction * settle * 0.095 * amount
+  }
+
+  if (style === 'blur') {
+    scale = 1.045 + progress * 0.035 * amount
+  }
+
+  if (style === 'chroma') {
+    const hit = Math.exp(-progress * 10)
+    scale = 1.035 + hit * 0.035 * amount
+    panX = Math.sin(sceneIndex * 2.1) * width * 0.006 * amount
+  }
+
+  if (style === 'dream') {
+    const direction = sceneIndex % 2 === 0 ? -1 : 1
+    scale = 1.06 + progress * 0.045 * amount
+    panX = direction * width * 0.022 * (progress - 0.5) * amount
+    panY = -height * 0.014 * Math.sin(progress * Math.PI) * amount
+  }
+
   return { scale, panX, panY, rotation }
+}
+
+function resolveTransition(transition: TransitionStyle, style: EditStyle): Exclude<TransitionStyle, 'auto'> {
+  if (transition !== 'auto') return transition
+  if (['flow', 'clean', 'drift', 'film', 'dream'].includes(style)) return 'crossfade'
+  if (['flash', 'punch', 'pulse'].includes(style)) return 'flash'
+  if (['whip', 'shake', 'spin'].includes(style)) return 'whip'
+  if (['glitch', 'chroma'].includes(style)) return 'glitch'
+  if (style === 'blur') return 'blur'
+  return 'cut'
 }
 
 function drawVignette(ctx: CanvasRenderingContext2D, width: number, height: number, opacity = 0.18) {
@@ -196,7 +338,7 @@ function drawVignette(ctx: CanvasRenderingContext2D, width: number, height: numb
 }
 
 function drawFilmGrain(ctx: CanvasRenderingContext2D, width: number, height: number, frameSeed: number) {
-  const count = 42
+  const count = 46
   let seed = (frameSeed * 9301 + 49297) % 233280
   for (let i = 0; i < count; i += 1) {
     seed = (seed * 9301 + 49297) % 233280
@@ -216,63 +358,110 @@ function renderFrame(
   width: number,
   height: number,
   style: EditStyle,
+  transition: TransitionStyle,
+  colorLook: ColorLook,
+  cropMode: CropMode,
   sceneIndex: number,
   progress: number,
   strength: number,
   intensity: number,
+  beatAccents: boolean,
   frameSeed: number
 ) {
   ctx.globalAlpha = 1
-  ctx.fillStyle = '#11110f'
+  ctx.filter = 'none'
+  ctx.fillStyle = '#0d1114'
   ctx.fillRect(0, 0, width, height)
 
   const transform = styleTransform(style, sceneIndex, progress, strength, intensity, width, height)
-  const crossfadeStyles: EditStyle[] = ['flow', 'clean', 'drift', 'film']
-  const fadeWindow = style === 'clean' ? 0.2 : 0.14
-  const mix = crossfadeStyles.includes(style) && previous ? ease(clamp(progress / fadeWindow)) : 1
+  const activeTransition = resolveTransition(transition, style)
+  const transitionWindow = activeTransition === 'crossfade' ? 0.2 : activeTransition === 'blur' ? 0.18 : 0.12
+  const transitionProgress = clamp(progress / transitionWindow)
+  const mix = ['crossfade', 'blur'].includes(activeTransition) && previous ? ease(transitionProgress) : 1
 
   if (previous && mix < 1) {
     const prevTransform = styleTransform(style, sceneIndex - 1, 1, strength, intensity, width, height)
-    drawCover(ctx, previous.source, width, height, prevTransform.scale, prevTransform.panX, prevTransform.panY, prevTransform.rotation, 1)
+    drawMedia(ctx, previous.source, width, height, cropMode, colorLook, prevTransform, 1)
   }
 
-  drawCover(ctx, current.source, width, height, transform.scale, transform.panX, transform.panY, transform.rotation, mix)
+  let currentTransform = transform
+  let blurAmount = style === 'blur' ? Math.max(0, (1 - Math.min(1, progress / 0.28)) * 13 * intensity) : 0
 
-  if (style === 'punch' && progress < 0.11) {
-    const alpha = (1 - progress / 0.11) * 0.16 * clamp(intensity) * (0.5 + strength)
-    ctx.fillStyle = `rgba(255,45,58,${alpha})`
+  if (activeTransition === 'whip' && previous && progress < transitionWindow) {
+    const direction = sceneIndex % 2 === 0 ? 1 : -1
+    const enter = 1 - ease(transitionProgress)
+    const prevTransform = { ...transform, panX: -direction * width * 0.5 * (1 - enter), scale: 1.04 }
+    drawMedia(ctx, previous.source, width, height, cropMode, colorLook, prevTransform, 1)
+    currentTransform = { ...transform, panX: transform.panX + direction * width * 0.56 * enter }
+  }
+
+  if (activeTransition === 'blur') blurAmount += (1 - transitionProgress) * 18 * intensity
+
+  drawMedia(ctx, current.source, width, height, cropMode, colorLook, currentTransform, mix, blurAmount)
+
+  if (style === 'chroma' && progress < 0.16) {
+    const fade = 1 - progress / 0.16
+    ctx.save()
+    ctx.globalCompositeOperation = 'screen'
+    drawMedia(ctx, current.source, width, height, cropMode, colorLook, { ...transform, panX: transform.panX - width * 0.012 * fade }, 0.12 * fade, 0)
+    ctx.fillStyle = `rgba(255,45,58,${0.06 * fade})`
     ctx.fillRect(0, 0, width, height)
+    ctx.restore()
   }
-
-  if (style === 'flash' && progress < 0.085) {
-    const alpha = (1 - progress / 0.085) * 0.48 * clamp(intensity) * (0.45 + strength)
-    ctx.fillStyle = `rgba(255,245,238,${alpha})`
-    ctx.fillRect(0, 0, width, height)
-  }
-
-  if (style === 'clean') drawVignette(ctx, width, height, 0.1)
 
   if (style === 'film') {
-    ctx.fillStyle = 'rgba(255,126,91,.055)'
+    ctx.fillStyle = 'rgba(255,126,91,.045)'
     ctx.fillRect(0, 0, width, height)
     drawVignette(ctx, width, height, 0.24)
     drawFilmGrain(ctx, width, height, frameSeed)
   }
 
-  if (style === 'glitch' && progress < 0.09 && strength > 0.42) {
-    const fade = 1 - progress / 0.09
-    const alpha = 0.14 * clamp(intensity) * fade
+  if (style === 'clean') drawVignette(ctx, width, height, 0.1)
 
-    ctx.fillStyle = `rgba(255,42,91,${alpha})`
+  if (style === 'dream') {
+    const gradient = ctx.createLinearGradient(0, 0, width, height)
+    gradient.addColorStop(0, 'rgba(219,246,255,.10)')
+    gradient.addColorStop(1, 'rgba(255,255,255,.045)')
+    ctx.fillStyle = gradient
+    ctx.fillRect(0, 0, width, height)
+  }
+
+  const flashActive = activeTransition === 'flash' || style === 'flash'
+  if (flashActive && progress < 0.095) {
+    const alpha = (1 - progress / 0.095) * 0.46 * clamp(intensity) * (0.45 + strength)
+    ctx.fillStyle = `rgba(255,255,255,${alpha})`
+    ctx.fillRect(0, 0, width, height)
+  }
+
+  const glitchActive = activeTransition === 'glitch' || style === 'glitch' || style === 'chroma'
+  if (glitchActive && progress < 0.1 && strength > 0.35) {
+    const fade = 1 - progress / 0.1
+    const alpha = 0.17 * clamp(intensity) * fade
+    ctx.fillStyle = `rgba(255,45,58,${alpha})`
     ctx.fillRect(0, height * 0.27, width, height * 0.045)
-
-    ctx.fillStyle = `rgba(38,220,224,${alpha})`
+    ctx.fillStyle = `rgba(70,216,255,${alpha})`
     ctx.fillRect(0, height * 0.63, width, height * 0.032)
-
-    ctx.fillStyle = `rgba(255,255,255,${alpha * 0.6})`
+    ctx.fillStyle = `rgba(255,255,255,${alpha * 0.55})`
     ctx.fillRect(0, height * 0.47, width, height * 0.012)
   }
 
+  if (beatAccents && progress < 0.075 && strength > 0.62) {
+    const alpha = (1 - progress / 0.075) * 0.12 * intensity
+    ctx.fillStyle = `rgba(255,45,58,${alpha})`
+    ctx.fillRect(0, 0, width, height)
+  }
+}
+
+function buildMediaSequence(length: number, order: MediaOrder) {
+  const sequence = Array.from({ length }, (_, index) => index)
+  if (order === 'sequence' || length <= 2) return sequence
+  let seed = length * 97 + 31
+  for (let i = sequence.length - 1; i > 0; i -= 1) {
+    seed = (seed * 1664525 + 1013904223) >>> 0
+    const j = seed % (i + 1)
+    ;[sequence[i], sequence[j]] = [sequence[j], sequence[i]]
+  }
+  return sequence
 }
 
 export function canExportLocally() {
@@ -282,13 +471,35 @@ export function canExportLocally() {
 export async function exportVideo(options: ExportOptions): Promise<ExportResult> {
   if (!canExportLocally()) throw new Error('unsupported')
 
-  const { media, audioFile, analysis, seconds, startAt, style, quality, cutMode, intensity, onProgress } = options
+  const {
+    media,
+    audioFile,
+    analysis,
+    seconds,
+    startAt,
+    style,
+    fxPool = [style],
+    transition,
+    colorLook,
+    quality,
+    cutMode,
+    customInterval,
+    mediaOrder,
+    cropMode,
+    videoSpeed,
+    beatAccents,
+    intensity,
+    onProgress
+  } = options
+
   const width = quality === '1080' ? 1080 : 720
   const height = quality === '1080' ? 1920 : 1280
   const safeStart = Math.max(0, Math.min(startAt, Math.max(0, analysis.duration - 0.2)))
   const duration = Math.min(Math.max(3, seconds), Math.max(0.2, analysis.duration - safeStart), 180)
-  const editBeats = selectEditBeats(analysis, cutMode, safeStart, duration)
+  const editBeats = selectEditBeats(analysis, cutMode, safeStart, duration, customInterval)
   const prepared = await loadPrepared(media)
+  const mediaSequence = buildMediaSequence(prepared.length, mediaOrder)
+  const effects = fxPool.length ? fxPool : [style]
 
   const canvas = document.createElement('canvas')
   canvas.width = width
@@ -340,23 +551,43 @@ export async function exportVideo(options: ExportOptions): Promise<ExportResult>
     const elapsed = clamp(audioContext.currentTime - renderStart, 0, duration)
     const absoluteTime = safeStart + elapsed
     const scene = sceneForTime(absoluteTime, editBeats, analysis)
-    const mediaIndex = scene.index % prepared.length
-    const previousIndex = scene.index > 0 ? (scene.index - 1) % prepared.length : prepared.length - 1
+    const mediaIndex = mediaSequence[scene.index % mediaSequence.length]
+    const previousSceneIndex = scene.index > 0 ? scene.index - 1 : Math.max(0, mediaSequence.length - 1)
+    const previousIndex = mediaSequence[previousSceneIndex % mediaSequence.length]
     const current = prepared[mediaIndex]
     const previous = prepared[previousIndex]
+    const activeStyle = effects[scene.index % effects.length] ?? style
 
     if (scene.index !== currentScene) {
       previousVideo = activeVideo
       currentScene = scene.index
       activeVideo = current.video
       if (activeVideo) {
+        activeVideo.playbackRate = Math.min(2, Math.max(0.5, videoSpeed))
         try { activeVideo.currentTime = 0 } catch { /* ignore */ }
         void activeVideo.play().catch(() => undefined)
       }
-      if (previousVideo && previousVideo !== activeVideo && !['flow', 'clean', 'drift', 'film'].includes(style)) previousVideo.pause()
+      if (previousVideo && previousVideo !== activeVideo && resolveTransition(transition, activeStyle) === 'cut') previousVideo.pause()
     }
 
-    renderFrame(ctx, current, previous, width, height, style, scene.index, scene.progress, scene.strength, intensity, frameSeed++)
+    renderFrame(
+      ctx,
+      current,
+      previous,
+      width,
+      height,
+      activeStyle,
+      transition,
+      colorLook,
+      cropMode,
+      scene.index,
+      scene.progress,
+      scene.strength,
+      intensity,
+      beatAccents,
+      frameSeed++
+    )
+
     onProgress?.(clamp(elapsed / duration))
     if (elapsed < duration) frameId = requestAnimationFrame(render)
   }

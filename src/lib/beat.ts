@@ -280,13 +280,22 @@ export function selectEditBeats(
   analysis: BeatAnalysis,
   mode: CutMode,
   startAt: number,
-  duration: number
+  duration: number,
+  customInterval = 0.75
 ) {
   const start = Math.max(0, startAt)
   const end = Math.min(analysis.duration, start + duration)
   const all = analysis.beats.filter((beat) => beat >= start && beat <= end)
 
   if (!all.length) return [start, end]
+
+  if (mode === 'custom') {
+    const interval = Math.min(4, Math.max(0.2, customInterval))
+    const selected: number[] = [start]
+    for (let time = start + interval; time <= end + 0.001; time += interval) selected.push(Math.min(time, end))
+    return selected
+  }
+
   if (mode === 'every') return [start, ...all.filter((beat) => beat > start + 0.04)]
 
   if (mode === 'strong') {
