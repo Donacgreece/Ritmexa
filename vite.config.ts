@@ -10,7 +10,7 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: [
         'favicon.svg',
-        'apple-touch-icon.png',
+        'apple-touch-icon-v026.png',
         'launch/*.png'
       ],
       manifest: {
@@ -25,9 +25,9 @@ export default defineConfig({
         scope: './',
         categories: ['photo', 'video', 'music'],
         icons: [
-          { src: 'pwa-192x192.png', sizes: '192x192', type: 'image/png', purpose: 'any' },
-          { src: 'pwa-512x512.png', sizes: '512x512', type: 'image/png', purpose: 'any' },
-          { src: 'pwa-512x512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' }
+          { src: 'pwa-192x192-v026.png', sizes: '192x192', type: 'image/png', purpose: 'any' },
+          { src: 'pwa-512x512-v026.png', sizes: '512x512', type: 'image/png', purpose: 'any' },
+          { src: 'pwa-512x512-v026.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' }
         ]
       },
       workbox: {

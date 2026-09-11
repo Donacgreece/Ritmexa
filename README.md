@@ -166,3 +166,7 @@ Version 0.2.4 slightly increases the preview size on desktop, tablet and phone w
 ## 0.2.5 first screen and install flow
 
 The mobile and installed app workspace now opens with the live preview and media step as the first two visible editing elements. The preview is slightly larger on phone and desktop. Android receives an in app install prompt that launches the native PWA install flow, while iPhone users receive a short modal with the Safari Add to Home Screen steps.
+
+## 0.2.6 icon restoration
+
+Restores the original Ritmexa PWA icon artwork from the first release and switches the manifest to versioned icon filenames so mobile operating systems do not keep the accidentally regenerated icon in cache.
