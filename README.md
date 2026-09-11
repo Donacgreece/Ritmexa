@@ -162,3 +162,7 @@ The preview was redesigned to stay compact at every viewport size. Desktop and l
 ## Preview sizing
 
 Version 0.2.4 slightly increases the preview size on desktop, tablet and phone while keeping the compact no-scroll workspace introduced in 0.2.3.
+
+## 0.2.5 first screen and install flow
+
+The mobile and installed app workspace now opens with the live preview and media step as the first two visible editing elements. The preview is slightly larger on phone and desktop. Android receives an in app install prompt that launches the native PWA install flow, while iPhone users receive a short modal with the Safari Add to Home Screen steps.

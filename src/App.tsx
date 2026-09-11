@@ -58,6 +58,8 @@ function App() {
   const [error, setError] = useState('')
   const [installEvent, setInstallEvent] = useState<InstallEvent | null>(null)
   const [standalone, setStandalone] = useState(false)
+  const [installPlatform, setInstallPlatform] = useState<'android' | 'ios' | 'other'>('other')
+  const [installPromptOpen, setInstallPromptOpen] = useState(false)
   const audioRef = useRef<HTMLAudioElement>(null)
 
   useEffect(() => {
@@ -75,9 +77,23 @@ function App() {
       Boolean((navigator as Navigator & { standalone?: boolean }).standalone)
     setStandalone(standaloneMode)
 
+    const userAgent = navigator.userAgent
+    const ios = /iPad|iPhone|iPod/.test(userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)
+    const android = /Android/i.test(userAgent)
+    setInstallPlatform(ios ? 'ios' : android ? 'android' : 'other')
+
     window.addEventListener('beforeinstallprompt', handler)
     return () => window.removeEventListener('beforeinstallprompt', handler)
   }, [])
+
+  useEffect(() => {
+    if (standalone || installPlatform === 'other') return
+    if (sessionStorage.getItem('ritmexa-install-dismissed') === '1') return
+    if (installPlatform === 'android' && !installEvent) return
+
+    const timer = window.setTimeout(() => setInstallPromptOpen(true), 1200)
+    return () => window.clearTimeout(timer)
+  }, [standalone, installPlatform, installEvent])
 
   useEffect(() => () => {
     media.forEach((item) => URL.revokeObjectURL(item.url))
@@ -302,10 +318,20 @@ function App() {
     setError('')
   }
 
+  const dismissInstallPrompt = () => {
+    setInstallPromptOpen(false)
+    sessionStorage.setItem('ritmexa-install-dismissed', '1')
+  }
+
   const install = async () => {
+    if (installPlatform === 'ios') {
+      setInstallPromptOpen(true)
+      return
+    }
     if (!installEvent) return
     await installEvent.prompt()
-    await installEvent.userChoice
+    const choice = await installEvent.userChoice
+    if (choice.outcome === 'accepted') dismissInstallPrompt()
     setInstallEvent(null)
   }
 
@@ -321,9 +347,37 @@ function App() {
             <button className={language === 'el' ? 'active' : ''} onClick={() => setLanguage('el')}>EL</button>
             <button className={language === 'en' ? 'active' : ''} onClick={() => setLanguage('en')}>EN</button>
           </div>
-          {!standalone && installEvent && <button className="icon-button install-button" onClick={install}>{copy.install}</button>}
+          {!standalone && (installEvent || installPlatform === 'ios') && <button className="icon-button install-button" onClick={() => void install()}>{copy.install}</button>}
         </div>
       </header>
+
+      {installPromptOpen && !standalone && installPlatform !== 'other' && (
+        <div className="install-overlay" role="dialog" aria-modal="true" aria-label={copy.installTitle}>
+          <div className={`install-sheet ${installPlatform === 'ios' ? 'ios-install-sheet' : 'android-install-sheet'}`}>
+            <button className="install-close" onClick={dismissInstallPrompt} aria-label={copy.close}>×</button>
+            <div className="install-app-icon"><span className="brand-mark small"><i /><i /><i /><b /></span></div>
+            <div className="install-copy">
+              <span className="eyebrow">RITMEXA APP</span>
+              <h2>{installPlatform === 'ios' ? copy.iosInstallTitle : copy.installTitle}</h2>
+              <p>{installPlatform === 'ios' ? copy.iosInstallText : copy.androidInstallText}</p>
+            </div>
+
+            {installPlatform === 'ios' ? (
+              <div className="ios-install-steps">
+                <div><span>1</span><p>{copy.iosStep1}</p></div>
+                <div><span>2</span><p>{copy.iosStep2}</p></div>
+                <div><span>3</span><p>{copy.iosStep3}</p></div>
+                <button className="secondary-button full" onClick={dismissInstallPrompt}>{copy.gotIt}</button>
+              </div>
+            ) : (
+              <div className="android-install-actions">
+                <button className="primary-button full" onClick={() => void install()}>{copy.installNow}<span>↓</span></button>
+                <button className="text-button" onClick={dismissInstallPrompt}>{copy.maybeLater}</button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       <main>
         <section className="hero">
@@ -366,7 +420,7 @@ function App() {
 
           <div className="studio-grid">
             <div className="controls-column">
-              <article className="panel">
+              <article className="panel media-panel">
                 <div className="panel-heading"><div><span className="panel-number">01</span><h3>{copy.addMedia}</h3></div><p>{copy.mediaHelp}</p></div>
                 <label className="dropzone" onDragOver={(event) => event.preventDefault()} onDrop={onMediaDrop}>
                   <input className="native-file-input" type="file" accept={MEDIA_ACCEPT} multiple onClick={(event) => { event.currentTarget.value = '' }} onChange={(event) => void addMedia(event.target.files)} />
