@@ -158,3 +158,7 @@ Version 0.2.2 invokes Vite and TypeScript through Node directly and normalizes e
 ## 0.2.3 preview workspace
 
 The preview was redesigned to stay compact at every viewport size. Desktop and laptop layouts no longer use an internal preview scrollbar, while phones use a compact horizontal preview card so the 9:16 canvas does not take over half of the screen. Export controls now live in the main editing column.
+
+## Preview sizing
+
+Version 0.2.4 slightly increases the preview size on desktop, tablet and phone while keeping the compact no-scroll workspace introduced in 0.2.3.

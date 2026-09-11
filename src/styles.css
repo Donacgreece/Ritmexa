@@ -490,3 +490,49 @@ footer { width: min(1420px,calc(100% - clamp(24px,5vw,84px))); margin: 0 auto; p
   .preview-phone { width: 96px !important; height: 171px !important; max-width: 96px !important; max-height: 171px !important; }
   .preview-button { height: 41px; font-size: 11px; }
 }
+
+
+/* Ritmexa 0.2.4 preview sizing tune. Slightly larger without bringing back scroll. */
+@media (min-width: 901px) {
+  .studio-grid {
+    grid-template-columns: minmax(0, 1fr) minmax(290px, 370px) !important;
+  }
+  .preview-sticky {
+    max-width: 370px !important;
+    padding: 16px !important;
+  }
+  .preview-phone {
+    height: clamp(300px, 48dvh, 470px) !important;
+  }
+}
+
+@media (min-width: 761px) and (max-width: 900px) {
+  .preview-phone {
+    height: min(420px, 50dvh) !important;
+  }
+}
+
+@media (max-width: 760px) {
+  .preview-sticky {
+    grid-template-columns: 124px minmax(0, 1fr) !important;
+    column-gap: 12px !important;
+  }
+  .preview-phone {
+    width: 124px !important;
+    height: 220px !important;
+    max-width: 124px !important;
+    max-height: 220px !important;
+  }
+}
+
+@media (max-width: 380px) {
+  .preview-sticky {
+    grid-template-columns: 112px minmax(0, 1fr) !important;
+  }
+  .preview-phone {
+    width: 112px !important;
+    height: 199px !important;
+    max-width: 112px !important;
+    max-height: 199px !important;
+  }
+}
