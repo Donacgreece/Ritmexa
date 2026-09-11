@@ -1,13 +1,13 @@
-{
+﻿{
   "name": "ritmexa",
   "private": true,
   "version": "0.1.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build",
+    "build": "tsc --noEmit -p tsconfig.app.json && vite build",
     "preview": "vite preview",
-    "check": "tsc -b --pretty false"
+    "check": "tsc --noEmit -p tsconfig.app.json --pretty false"
   },
   "dependencies": {
     "@vitejs/plugin-react": "latest",
