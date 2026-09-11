@@ -491,6 +491,19 @@ function App() {
                 <div className="preset-row">{PRESETS.map((value) => <button key={value} disabled={value > availableDuration} className={Math.round(effectiveDuration) === value ? 'active' : ''} onClick={() => setSeconds(Math.min(value, availableDuration))}>{value}s</button>)}</div>
                 {analysis && <div className="timing-summary"><span>{formatTime(startAt)} → {formatTime(startAt + effectiveDuration)}</span><strong>{editBeats.length} cuts</strong></div>}
               </article>
+
+              <article className="panel export-workspace">
+                <div className="panel-heading export-heading">
+                  <div><span className="panel-number">04</span><h3>{copy.ready}</h3></div>
+                  <p>{copy.readyText}</p>
+                </div>
+                {exporting && <div className="progress-wrap"><div className="progress-line"><i style={{ width: `${Math.round(progress * 100)}%` }} /></div><span>{Math.round(progress * 100)}%</span></div>}
+                <button className="primary-button full" onClick={() => void runExport()} disabled={exporting}>{exporting ? copy.exporting : copy.exportNow}<span>{exporting ? '…' : '→'}</span></button>
+                {result && <a className="download-button" href={result.url} download={result.filename}>{copy.download}<span>↓</span></a>}
+                {result && <button className="text-button" onClick={reset}>{copy.newEdit}</button>}
+                <small className="browser-note">{copy.browserNote}</small>
+                {error && <div className="error-box" role="alert">{error}</div>}
+              </article>
             </div>
 
             <aside className="preview-column">
@@ -509,15 +522,6 @@ function App() {
                 <small className="preview-hint">{copy.previewHint}</small>
                 <div className="timeline-mini">{media.slice(0, 14).map((item, index) => <span key={item.id} className={index === previewIndex ? 'active' : ''}>{item.kind === 'image' ? <img src={item.url} alt="" /> : <video src={item.url} muted />}</span>)}</div>
 
-                <div className="export-card">
-                  <span className="panel-number">04</span><h3>{copy.ready}</h3><p>{copy.readyText}</p>
-                  {exporting && <div className="progress-wrap"><div className="progress-line"><i style={{ width: `${Math.round(progress * 100)}%` }} /></div><span>{Math.round(progress * 100)}%</span></div>}
-                  <button className="primary-button full" onClick={() => void runExport()} disabled={exporting}>{exporting ? copy.exporting : copy.exportNow}<span>{exporting ? '…' : '→'}</span></button>
-                  {result && <a className="download-button" href={result.url} download={result.filename}>{copy.download}<span>↓</span></a>}
-                  {result && <button className="text-button" onClick={reset}>{copy.newEdit}</button>}
-                  <small className="browser-note">{copy.browserNote}</small>
-                </div>
-                {error && <div className="error-box" role="alert">{error}</div>}
               </div>
             </aside>
           </div>

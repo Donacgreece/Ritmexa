@@ -347,3 +347,146 @@ footer { width: min(1420px,calc(100% - clamp(24px,5vw,84px))); margin: 0 auto; p
   .pwa-mode .studio { padding-top: 18px; }
   .pwa-mode .mobile-studio-title { display: block; }
 }
+
+
+/* Ritmexa 0.2.3 preview workspace fix */
+.export-workspace { overflow: hidden; }
+.export-heading { align-items: center; }
+.export-heading p { max-width: 430px; }
+
+/* Desktop and laptop: the preview always fits in the visible workspace. */
+@media (min-width: 901px) {
+  .studio-grid {
+    grid-template-columns: minmax(0, 1fr) minmax(260px, 340px) !important;
+    gap: clamp(18px, 2.4vw, 30px);
+  }
+  .preview-column { width: auto !important; min-width: 0; align-self: start; }
+  .preview-sticky {
+    position: sticky !important;
+    top: 94px !important;
+    width: 100% !important;
+    max-width: 340px !important;
+    max-height: none !important;
+    margin-inline: auto;
+    padding: 15px !important;
+    overflow: visible !important;
+    overscroll-behavior: auto !important;
+  }
+  .preview-heading { margin-bottom: 10px; }
+  .preview-phone {
+    width: auto !important;
+    height: clamp(260px, 42dvh, 410px) !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    max-height: none !important;
+    aspect-ratio: 9 / 16;
+    margin-inline: auto;
+    padding: 6px;
+    border-radius: 30px;
+  }
+  .preview-screen { border-radius: 24px; }
+  .preview-button { height: 42px; margin-top: 9px; }
+  .preview-hint { margin-top: 6px; }
+  .timeline-mini { margin-top: 8px; }
+  .timeline-mini span { flex-basis: 31px; width: 31px; }
+}
+
+/* Tablet keeps the preview compact and never creates its own scroll area. */
+@media (min-width: 761px) and (max-width: 900px) {
+  .preview-sticky {
+    position: relative !important;
+    top: auto !important;
+    max-height: none !important;
+    overflow: visible !important;
+    max-width: 620px !important;
+    padding: 15px !important;
+  }
+  .preview-phone {
+    width: auto !important;
+    height: min(390px, 46dvh) !important;
+    min-width: 0 !important;
+    max-height: none !important;
+    aspect-ratio: 9 / 16;
+  }
+}
+
+/* Phone: compact horizontal preview instead of a half-screen phone mockup. */
+@media (max-width: 760px) {
+  .mobile-studio-title { display: none !important; }
+  .studio { padding-top: 8px !important; }
+  .studio-grid { display: flex !important; flex-direction: column; gap: 10px; }
+  .preview-column { order: -1; width: 100%; }
+  .preview-sticky {
+    display: grid;
+    grid-template-columns: 108px minmax(0, 1fr);
+    grid-template-areas:
+      "heading heading"
+      "phone button"
+      "phone hint"
+      "phone timeline";
+    column-gap: 11px;
+    row-gap: 6px;
+    width: 100% !important;
+    max-width: none !important;
+    max-height: none !important;
+    padding: 11px !important;
+    overflow: hidden !important;
+    border-radius: 18px !important;
+  }
+  .preview-heading { grid-area: heading; margin: 0 0 2px; }
+  .preview-phone {
+    grid-area: phone;
+    width: 108px !important;
+    height: 192px !important;
+    min-width: 0 !important;
+    max-width: 108px !important;
+    max-height: 192px !important;
+    margin: 0 !important;
+    padding: 4px;
+    border-radius: 22px;
+    box-shadow: 0 12px 24px rgba(0,0,0,.14);
+  }
+  .preview-screen { border-radius: 18px; }
+  .preview-placeholder strong { font-size: 18px; }
+  .preview-placeholder small { font-size: 7px; text-align: center; padding-inline: 5px; }
+  .preview-placeholder .brand-mark { transform: scale(.52); transform-origin: center; }
+  .preview-button {
+    grid-area: button;
+    align-self: start;
+    width: 100%;
+    height: 44px;
+    margin: 0 !important;
+    border-radius: 13px;
+    font-size: 12px;
+  }
+  .preview-hint {
+    grid-area: hint;
+    align-self: start;
+    margin: 0 !important;
+    padding: 0 2px;
+    text-align: left;
+    font-size: 8px;
+    line-height: 1.35;
+  }
+  .timeline-mini {
+    grid-area: timeline;
+    align-self: end;
+    width: 100%;
+    max-width: 100%;
+    margin: 0 !important;
+    padding-bottom: 0;
+    gap: 4px;
+  }
+  .timeline-mini span {
+    width: 30px;
+    flex: 0 0 30px;
+    border-radius: 7px;
+  }
+  .export-workspace { order: 20; }
+}
+
+@media (max-width: 380px) {
+  .preview-sticky { grid-template-columns: 96px minmax(0,1fr); column-gap: 9px; }
+  .preview-phone { width: 96px !important; height: 171px !important; max-width: 96px !important; max-height: 171px !important; }
+  .preview-button { height: 41px; font-size: 11px; }
+}

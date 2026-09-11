@@ -153,3 +153,8 @@ On phones, 720p is recommended for faster and more reliable local rendering. Bro
 ### Build reliability
 
 Version 0.2.2 invokes Vite and TypeScript through Node directly and normalizes executable permissions in GitHub Actions. This avoids cross platform executable bit issues during Pages builds.
+
+
+## 0.2.3 preview workspace
+
+The preview was redesigned to stay compact at every viewport size. Desktop and laptop layouts no longer use an internal preview scrollbar, while phones use a compact horizontal preview card so the 9:16 canvas does not take over half of the screen. Export controls now live in the main editing column.
