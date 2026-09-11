@@ -148,3 +148,8 @@ On phones, 720p is recommended for faster and more reliable local rendering. Bro
 | Warm Gray | `#858B88` |
 
 **Ritmexa 0.2.0**
+
+
+### Build reliability
+
+Version 0.2.2 invokes Vite and TypeScript through Node directly and normalizes executable permissions in GitHub Actions. This avoids cross platform executable bit issues during Pages builds.

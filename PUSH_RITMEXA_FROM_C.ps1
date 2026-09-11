@@ -1,4 +1,4 @@
-$ErrorActionPreference = "Stop"
+﻿$ErrorActionPreference = "Stop"
 
 $RepoUrl = "https://github.com/Donacgreece/Ritmexa.git"
 $Branch = "main"
@@ -119,6 +119,8 @@ try {
 
     Write-Host ""
     Write-Host "[6/7] Installing dependencies and validating production build..." -ForegroundColor Cyan
+
+    if (Test-Path "package-lock.json") { Remove-Item "package-lock.json" -Force }
 
     & npm install --no-audit --no-fund
 
