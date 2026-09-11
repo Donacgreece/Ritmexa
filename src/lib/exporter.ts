@@ -240,7 +240,7 @@ function renderFrame(
 
   if (style === 'punch' && progress < 0.11) {
     const alpha = (1 - progress / 0.11) * 0.16 * clamp(intensity) * (0.5 + strength)
-    ctx.fillStyle = `rgba(255,107,91,${alpha})`
+    ctx.fillStyle = `rgba(255,45,58,${alpha})`
     ctx.fillRect(0, 0, width, height)
   }
 

@@ -14,7 +14,6 @@ function Pause-Ritmexa {
 
 function Fail-Ritmexa {
     param([string]$Message)
-
     Write-Host ""
     Write-Host "ERROR: $Message" -ForegroundColor Red
     Pause-Ritmexa
@@ -26,7 +25,7 @@ try {
 
     Write-Host ""
     Write-Host "========================================" -ForegroundColor DarkGray
-    Write-Host " Ritmexa ZIP Build and Push" -ForegroundColor Magenta
+    Write-Host " Ritmexa v0.2.7 Build and Push" -ForegroundColor Magenta
     Write-Host "========================================" -ForegroundColor DarkGray
     Write-Host ""
 
@@ -36,14 +35,14 @@ try {
         }
     }
 
-    Write-Host "[1/7] Finding latest Ritmexa ZIP in Downloads..." -ForegroundColor Cyan
+    Write-Host "[1/7] Finding Ritmexa v0.2.7 ZIP in Downloads..." -ForegroundColor Cyan
 
-    $Zip = Get-ChildItem -Path $Downloads -Filter "Ritmexa*.zip" -File |
+    $Zip = Get-ChildItem -Path $Downloads -Filter "Ritmexa_v0.2.7*.zip" -File |
         Sort-Object LastWriteTime -Descending |
         Select-Object -First 1
 
     if (-not $Zip) {
-        Fail-Ritmexa "No Ritmexa ZIP was found in $Downloads"
+        Fail-Ritmexa "Ritmexa_v0.2.7 ZIP was not found in $Downloads"
     }
 
     Write-Host "Using: $($Zip.FullName)" -ForegroundColor Green
@@ -52,57 +51,36 @@ try {
     Write-Host "[2/7] Checking GitHub login..." -ForegroundColor Cyan
 
     & gh auth status *> $null
-
     if ($LASTEXITCODE -ne 0) {
         Write-Host "GitHub login is required. A browser window will open." -ForegroundColor Yellow
         & gh auth login --hostname github.com --git-protocol https --web
-
-        if ($LASTEXITCODE -ne 0) {
-            Fail-Ritmexa "GitHub login failed."
-        }
+        if ($LASTEXITCODE -ne 0) { Fail-Ritmexa "GitHub login failed." }
     }
 
     & gh auth setup-git
-
-    if ($LASTEXITCODE -ne 0) {
-        Fail-Ritmexa "Could not configure GitHub authentication for Git."
-    }
-
+    if ($LASTEXITCODE -ne 0) { Fail-Ritmexa "Could not configure GitHub authentication for Git." }
     Write-Host "GitHub login OK." -ForegroundColor Green
 
     Write-Host ""
     Write-Host "[3/7] Preparing clean working folders..." -ForegroundColor Cyan
 
-    if (Test-Path $RepoPath) {
-        Remove-Item $RepoPath -Recurse -Force
-    }
-
-    if (Test-Path $ExtractPath) {
-        Remove-Item $ExtractPath -Recurse -Force
-    }
-
+    if (Test-Path $RepoPath) { Remove-Item $RepoPath -Recurse -Force }
+    if (Test-Path $ExtractPath) { Remove-Item $ExtractPath -Recurse -Force }
     New-Item -ItemType Directory -Path $ExtractPath | Out-Null
 
     Write-Host ""
     Write-Host "[4/7] Cloning Ritmexa repository..." -ForegroundColor Cyan
 
     & git clone $RepoUrl $RepoPath
-
-    if ($LASTEXITCODE -ne 0) {
-        Fail-Ritmexa "git clone failed."
-    }
+    if ($LASTEXITCODE -ne 0) { Fail-Ritmexa "git clone failed." }
 
     Write-Host ""
     Write-Host "[5/7] Extracting the release and replacing project files..." -ForegroundColor Cyan
 
     Expand-Archive -Path $Zip.FullName -DestinationPath $ExtractPath -Force
 
-    $PackageFile = Get-ChildItem -Path $ExtractPath -Filter "package.json" -File -Recurse |
-        Select-Object -First 1
-
-    if (-not $PackageFile) {
-        Fail-Ritmexa "package.json was not found inside the ZIP."
-    }
+    $PackageFile = Get-ChildItem -Path $ExtractPath -Filter "package.json" -File -Recurse | Select-Object -First 1
+    if (-not $PackageFile) { Fail-Ritmexa "package.json was not found inside the ZIP." }
 
     $SourcePath = $PackageFile.Directory.FullName
     Write-Host "Project source: $SourcePath" -ForegroundColor DarkGray
@@ -123,22 +101,13 @@ try {
     if (Test-Path "package-lock.json") { Remove-Item "package-lock.json" -Force }
 
     & npm install --no-audit --no-fund
-
-    if ($LASTEXITCODE -ne 0) {
-        Fail-Ritmexa "npm install failed. Nothing was pushed."
-    }
+    if ($LASTEXITCODE -ne 0) { Fail-Ritmexa "npm install failed. Nothing was pushed." }
 
     & npm run check
-
-    if ($LASTEXITCODE -ne 0) {
-        Fail-Ritmexa "TypeScript check failed. Nothing was pushed."
-    }
+    if ($LASTEXITCODE -ne 0) { Fail-Ritmexa "TypeScript check failed. Nothing was pushed." }
 
     & npm run build
-
-    if ($LASTEXITCODE -ne 0) {
-        Fail-Ritmexa "Production build failed. Nothing was pushed."
-    }
+    if ($LASTEXITCODE -ne 0) { Fail-Ritmexa "Production build failed. Nothing was pushed." }
 
     if (-not (Test-Path "dist")) {
         Fail-Ritmexa "The production build completed but the dist folder was not created. Nothing was pushed."
@@ -150,13 +119,9 @@ try {
     Write-Host "[7/7] Committing and pushing to GitHub..." -ForegroundColor Cyan
 
     & git add -A
-
-    if ($LASTEXITCODE -ne 0) {
-        Fail-Ritmexa "git add failed."
-    }
+    if ($LASTEXITCODE -ne 0) { Fail-Ritmexa "git add failed." }
 
     $Changes = & git status --porcelain
-
     if (-not $Changes) {
         Write-Host "Nothing changed. The repository is already up to date." -ForegroundColor Yellow
         Pause-Ritmexa
@@ -168,16 +133,10 @@ try {
     $CommitMessage = "Ritmexa $Version"
 
     & git commit -m $CommitMessage
-
-    if ($LASTEXITCODE -ne 0) {
-        Fail-Ritmexa "git commit failed."
-    }
+    if ($LASTEXITCODE -ne 0) { Fail-Ritmexa "git commit failed." }
 
     & git push origin $Branch
-
-    if ($LASTEXITCODE -ne 0) {
-        Fail-Ritmexa "git push failed."
-    }
+    if ($LASTEXITCODE -ne 0) { Fail-Ritmexa "git push failed." }
 
     Write-Host ""
     Write-Host "========================================" -ForegroundColor DarkGray

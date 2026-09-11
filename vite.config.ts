@@ -10,24 +10,24 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: [
         'favicon.svg',
-        'apple-touch-icon-v026.png',
+        'apple-touch-icon-v027.png',
         'launch/*.png'
       ],
       manifest: {
         name: 'Ritmexa',
         short_name: 'Ritmexa',
         description: 'Beat synced vertical edits from photos, clips and your own soundtrack.',
-        theme_color: '#faf9f7',
-        background_color: '#faf9f7',
+        theme_color: '#ff2d3a',
+        background_color: '#dbf6ff',
         display: 'standalone',
         orientation: 'portrait',
         start_url: './',
         scope: './',
         categories: ['photo', 'video', 'music'],
         icons: [
-          { src: 'pwa-192x192-v026.png', sizes: '192x192', type: 'image/png', purpose: 'any' },
-          { src: 'pwa-512x512-v026.png', sizes: '512x512', type: 'image/png', purpose: 'any' },
-          { src: 'pwa-512x512-v026.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' }
+          { src: 'pwa-192x192-v027.png', sizes: '192x192', type: 'image/png', purpose: 'any' },
+          { src: 'pwa-512x512-v027.png', sizes: '512x512', type: 'image/png', purpose: 'any' },
+          { src: 'pwa-512x512-v027.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' }
         ]
       },
       workbox: {

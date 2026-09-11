@@ -141,13 +141,13 @@ On phones, 720p is recommended for faster and more reliable local rendering. Bro
 
 | Token | Value |
 | --- | --- |
-| Coral | `#FF6B5B` |
-| Peach | `#FFD6CC` |
-| Off White | `#FAF9F7` |
+| Machine Red | `#FF2D3A` |
+| Glacier Blue | `#DBF6FF` |
+| Ice White | `#F7FCFE` |
 | Charcoal | `#1F1F1F` |
 | Warm Gray | `#858B88` |
 
-**Ritmexa 0.2.0**
+**Ritmexa 0.2.7**
 
 
 ### Build reliability
@@ -170,3 +170,8 @@ The mobile and installed app workspace now opens with the live preview and media
 ## 0.2.6 icon restoration
 
 Restores the original Ritmexa PWA icon artwork from the first release and switches the manifest to versioned icon filenames so mobile operating systems do not keep the accidentally regenerated icon in cache.
+
+
+## 0.2.7 palette refresh
+
+The interface now uses Machine Red `#FF2D3A` as the primary action color and Glacier Blue `#DBF6FF` as the secondary surface color. PWA icons, splash screens, browser theme color and export accents were updated to match the new palette.
