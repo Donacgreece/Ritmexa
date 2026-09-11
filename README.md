@@ -1,109 +1,84 @@
-﻿<div align="center">
+<div align="center">
 
 # Ritmexa
 
 ### Your moments, on beat.
 
-**A privacy-first, mobile-first PWA for turning photos and short video clips into beat-synced vertical edits.**
+A local first Progressive Web App for creating beat synced vertical edits from photos, clips and your own soundtrack.
 
-[Live App](https://donacgreece.github.io/Ritmexa/) · [Repository](https://github.com/Donacgreece/Ritmexa)
+**Live app:** https://donacgreece.github.io/Ritmexa/
 
 </div>
 
----
+## Ritmexa 0.2
 
-## What is Ritmexa?
+Ritmexa 0.2 is a major upgrade focused on responsive layout, stronger audio analysis, a cleaner mobile app experience and more expressive editing controls.
 
-Ritmexa is a browser-based creator tool for making short, rhythm-driven videos from your own photos, clips and music.
+### Highlights
 
-The core editing workflow runs locally in the browser. Your selected media does not need to be uploaded to a Ritmexa server in the current version.
-
-Built for TikTok, Instagram Reels, YouTube Shorts and other vertical-video workflows.
-
-## Highlights
-
-- Mobile-first interface
-- Progressive Web App, installable on supported devices
+- Fully responsive interface for phones, tablets, laptops and desktop monitors
+- Desktop preview constrained to the available viewport so it does not overlap other content
+- Mobile interface that opens directly into the editing experience
+- Installable PWA with offline app shell
+- Apple startup images plus an in app launch screen
 - Greek and English UI
-- Local photo and video selection
-- Local audio decoding and beat detection
-- Automatic beat-synced cut timing
-- Punch, Flow and Clean edit styles
-- 15, 30, 45 and 60 second projects
-- 9:16 vertical output
-- 720p and 1080p export options
-- Browser-native video rendering
-- MP4 where supported, WebM fallback when required
-- No account required
+- iPhone friendly native file pickers
+- Music file input
+- Soundtrack extraction from a saved video file
+- Advanced local rhythm analysis
+- BPM estimation
+- Beat strength analysis
+- Strong beat detection
+- Tempo stability score
+- Energy analysis
+- Waveform visualization
+- Adjustable beat sensitivity
+- Custom edit duration
+- Custom soundtrack start point
+- Smart, Every Beat and Strong Beats cut modes
+- Adjustable motion intensity
+- Eight editing styles
+- 720p and 1080p vertical export
+- Local browser processing
+- No account
 - No watermark
-- Privacy-first local processing
 
-## How it works
+## Soundtrack sources
 
-1. **Add media**  
-   Choose photos and short video clips from your device.
+Ritmexa supports two soundtrack workflows.
 
-2. **Choose a track**  
-   Add an audio file directly from your device.
+### Music file
 
-3. **Analyze the beat**  
-   Ritmexa analyzes the track locally and estimates beat positions and BPM.
+Choose a local MP3, M4A, WAV, AAC, FLAC or another format supported by the browser.
 
-4. **Pick an editing style**  
-   Choose Punch, Flow or Clean.
+### Soundtrack from a saved video
 
-5. **Preview and export**  
-   Preview the rhythm-based sequence and render the result directly in your browser.
+Choose a saved TikTok, Reel, Short or another local video file. Ritmexa attempts to prepare the embedded audio locally on the device and then runs beat analysis on that soundtrack.
+
+Direct importing from a TikTok URL is not included in this release. The user supplies a saved video file from their device.
+
+## Motion styles
+
+- Punch
+- Flow
+- Clean
+- Flash
+- Drift
+- Film
+- Zoom
+- Glitch
 
 ## Privacy
 
-Ritmexa v0.1 is designed around local browser processing.
+The current editing workflow is designed to run locally in the browser. Selected photos, clips and soundtrack media are not uploaded to a Ritmexa media processing server.
 
-Your editing media stays on your device during the core workflow. There is no account requirement and no mandatory media upload.
+The website itself is hosted on GitHub Pages, so normal hosting request logs can still apply.
 
-See the included privacy page for the current privacy summary.
-
-## PWA
-
-Ritmexa is built as a Progressive Web App.
-
-On supported browsers it can be installed to the home screen or desktop and launched in a standalone app window.
-
-The PWA includes:
-
-- installable app manifest
-- application icons
-- service worker
-- offline app shell
-- automatic service-worker updates
-
-## Languages
-
-Ritmexa ships with two languages from the first release:
-
-- 🇬🇷 Ελληνικά
-- 🇬🇧 English
-
-The selected language is remembered locally in the browser.
-
-## Technology
-
-- React
-- TypeScript
-- Vite
-- Vite PWA
-- Web Audio API
-- Canvas
-- MediaRecorder
-- `canvas.captureStream()`
-- GitHub Actions
-- GitHub Pages
-
-## Local development
+## Development
 
 Requirements:
 
-- Node.js 22+
+- Node.js 22 or newer
 - npm
 
 Install dependencies:
@@ -112,13 +87,13 @@ Install dependencies:
 npm install
 ```
 
-Run the development server:
+Run development mode:
 
 ```bash
 npm run dev
 ```
 
-Type-check:
+Type check:
 
 ```bash
 npm run check
@@ -130,7 +105,7 @@ Create a production build:
 npm run build
 ```
 
-Preview the production build:
+Preview the build:
 
 ```bash
 npm run preview
@@ -138,58 +113,38 @@ npm run preview
 
 ## Deployment
 
-Ritmexa is configured to deploy automatically to GitHub Pages whenever a successful commit reaches `main`.
+Every successful push to `main` triggers the GitHub Pages workflow.
 
-Deployment workflow:
-
-```text
-.github/workflows/deploy-pages.yml
-```
-
-Live URL:
+Live address:
 
 ```text
 https://donacgreece.github.io/Ritmexa/
 ```
 
-GitHub repository:
+Repository:
 
 ```text
 https://github.com/Donacgreece/Ritmexa
 ```
 
-## Browser support
+## Browser targets
 
-Ritmexa relies on modern browser media APIs.
+Primary targets are current versions of:
 
-Primary targets:
-
+- Safari
 - Chrome
 - Edge
-- Safari
-- Chromium-based mobile browsers
 
-Actual export container and codec support can vary by browser and operating system.
-
-For mobile devices, 720p is recommended as the default export option. 1080p is available for more capable devices.
+On phones, 720p is recommended for faster and more reliable local rendering. Browser codec support determines whether the final file is MP4 or WebM.
 
 ## Brand
 
 | Token | Value |
-|---|---|
+| --- | --- |
 | Coral | `#FF6B5B` |
 | Peach | `#FFD6CC` |
 | Off White | `#FAF9F7` |
 | Charcoal | `#1F1F1F` |
-| Warm Gray | `#9CA3A0` |
+| Warm Gray | `#858B88` |
 
-**Ritmexa**  
-*Your moments, on beat.*
-
----
-
-### Current release
-
-`v0.1.0`
-
-Early product release. The project is actively evolving.
+**Ritmexa 0.2.0**

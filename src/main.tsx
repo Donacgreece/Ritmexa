@@ -11,3 +11,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
     <App />
   </React.StrictMode>
 )
+
+requestAnimationFrame(() => {
+  window.setTimeout(() => document.documentElement.classList.add('app-ready'), 620)
+})
